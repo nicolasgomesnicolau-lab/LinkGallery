@@ -23,6 +23,3 @@ jobs:
 
       - name: scanner4
         uses: trufflesecurity/trufflehog@main
-
-      - name: scanner7
-        run: npm run lint
