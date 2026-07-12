@@ -29,4 +29,4 @@ jobs:
         uses: github/codeql-action/analyze@v3
 
       - name: scanner7
-        uses: npm run lint
+        run: npm run lint
