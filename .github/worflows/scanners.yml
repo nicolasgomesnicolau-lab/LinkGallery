@@ -1,0 +1,32 @@
+name: protocols
+
+on:
+  pull_request:
+    branches: [main]
+    
+jobs:
+  scanners:
+    runs-on: ubuntu-latest
+    steps:
+      - name: scanners1
+        uses: actions/checkout@v4
+
+      - name: scanner2
+        run: npm install
+
+      - name: scanner3
+        run: npm audit --audit-level=high
+
+      - name: scanner4
+        uses: trufflesecurity/trufflehog@main
+
+      - name: scanner5
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+
+      - name: scanner6
+        uses: github/codeql-action/analyze@v3
+
+      - name: scanner7
+        uses: npm run lint
