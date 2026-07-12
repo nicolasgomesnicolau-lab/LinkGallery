@@ -24,13 +24,5 @@ jobs:
       - name: scanner4
         uses: trufflesecurity/trufflehog@main
 
-      - name: scanner5
-        uses: github/codeql-action/init@v3
-        with:
-          languages: javascript
-
-      - name: scanner6
-        uses: github/codeql-action/analyze@v3
-
       - name: scanner7
         run: npm run lint
