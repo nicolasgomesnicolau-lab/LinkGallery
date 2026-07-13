@@ -10,8 +10,6 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     permissions:
-      security-events: write # Necessário para enviar para a aba Security
-      actions: read
       contents: read
     steps:
       - name: Checkout code
@@ -41,11 +39,6 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
-
-      - name: Upload SARIF to Security Tab
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: SCANNERS/resultado.sarif
 
       - name: Upload results as artifact
         uses: actions/upload-artifact@v4
