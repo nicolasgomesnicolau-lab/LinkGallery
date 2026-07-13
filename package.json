@@ -1,19 +1,24 @@
 {
   "name": "linkgallery",
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "lint": "eslint .",
+    "test:security": "npx snyk test",
+    "test:sast": "semgrep scan --config auto --json > SCANNERS/resultado.json",
+    "test:dast": "docker run --rm -v ${PWD}:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://192.168.15.200:3000 -r SCANNERS/relatorio-dast.html",
+    "test:all": "npm run lint && npm run test:sast && npm run test:security && npm run test:dast"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.3.0",
     "multer": "^2.2.0",
     "sharp": "^0.35.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "snyk": "^1.1290.0"
   }
 }

@@ -112,10 +112,10 @@ function goBack() {
 
 // ===== API =====
 function api(url, opts) {
-  if (authPassword) url += (url.indexOf('?') > -1 ? '&' : '?') + 'password=' + encodeURIComponent(authPassword)
   opts = opts || {}
+  opts.headers = opts.headers || {}
+  if (authPassword) opts.headers['X-Auth-Password'] = authPassword
   if (opts.body && typeof opts.body === 'string') {
-    opts.headers = opts.headers || {}
     opts.headers['Content-Type'] = 'application/json'
   }
   return fetch(url, opts).then(function (r) {
@@ -388,9 +388,7 @@ function renderGrid(photos) {
 }
 
 function favfileUrl(photo) {
-  var url = '/api/favfile?path=' + encodeURIComponent(photo)
-  if (authPassword) url += '&password=' + encodeURIComponent(authPassword)
-  return url
+  return '/api/favfile?path=' + encodeURIComponent(photo)
 }
 
 function buildGridHTML(photos, startIdx) {
@@ -951,7 +949,8 @@ settingsBtn.addEventListener('click', function () {
   api('/api/config').then(function (cfg) {
     sourcePathInput.value = cfg.sourcePath
     slideIntervalInput.value = cfg.slideInterval
-    passwordInput.value = cfg.password || ''
+    passwordInput.value = cfg.hasPassword ? '' : ''
+    passwordInput.placeholder = cfg.hasPassword ? 'Senha já definida' : 'Nova senha'
     passwordEnabledInput.checked = cfg.passwordEnabled !== false
   })
   settingsOverlay.classList.add('open')

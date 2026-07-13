@@ -4,18 +4,36 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const sharp = require('sharp');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = 3000;
+
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+}));
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { success: false, error: 'Muitas tentativas. Tente novamente em 15 minutos.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 const CONFIG_FILE = path.join(__dirname, 'config.json');
 
-function getCookies(req) {
-  var c = {};
-  if (req.headers.cookie) req.headers.cookie.split(';').forEach(function (x) {
-    var p = x.split('=');
-    c[p[0].trim()] = (p[1] || '').trim();
-  });
-  return c;
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return a === b;
+  const hashA = crypto.createHash('sha256').update(a).digest();
+  const hashB = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(hashA, hashB);
+}
+
+function getAuthPassword(req) {
+  return req.headers['x-auth-password'] || req.query.password || '';
 }
 
 // Client-side login overlay is used; no server-rendered login page.
@@ -37,10 +55,22 @@ function saveConfig() { fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, nul
 const DB_FILE = path.join(__dirname, 'db.json');
 let db = { favorites: [] };
 if (fs.existsSync(DB_FILE)) { try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8')); } catch {} }
+// Normalize legacy favorites (may contain /source/ virtual paths)
+if (Array.isArray(db.favorites)) {
+  db.favorites = db.favorites.map(normalizeFavoritePath).filter(Boolean);
+}
 function saveDb() { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
 
+function normalizeFavoritePath(fp) {
+  if (fp.indexOf('/source/') === 0) {
+    const rel = decodeURIComponent(fp.replace(/^\/source\//, ''));
+    return path.resolve(config.sourcePath, rel);
+  }
+  return path.resolve(fp);
+}
+
 function getValidFavorites() {
-  return db.favorites.filter(function(fp) {
+  return db.favorites.map(normalizeFavoritePath).filter(function(fp) {
     try { return fs.existsSync(fp); } catch { return false; }
   });
 }
@@ -115,8 +145,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Password login (JSON API, always before password middleware)
-app.post('/login', express.json(), (req, res) => {
-  if (req.body.password === (config.password || '')) {
+app.post('/login', loginLimiter, express.json(), (req, res) => {
+  const sentPwd = req.body.password || '';
+  const storedPwd = config.password || '';
+  if (storedPwd && timingSafeEqual(sentPwd, storedPwd)) {
     res.json({ success: true });
   } else {
     res.status(403).json({ success: false, error: 'Senha incorreta' });
@@ -144,7 +176,8 @@ app.use((req, res, next) => {
 // Password middleware: allow page through, block API without password
 app.use((req, res, next) => {
   if (!config.passwordEnabled) return next();
-  if (req.query.password === (config.password || '')) return next();
+  const storedPwd = config.password || '';
+  if (storedPwd && timingSafeEqual(getAuthPassword(req), storedPwd)) return next();
   if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Senha necessaria' });
   // Serve the app page; client-side login overlay handles auth
   next();
@@ -194,9 +227,9 @@ app.use('/thumb', (req, res, next) => {
 app.get('/api/favfile', (req, res) => {
   const filePath = req.query.path;
   if (!filePath) return res.status(400).json({ error: 'Missing path' });
-  // Only allow serving files that are in the favorites list (security)
-  const normalized = path.resolve(filePath);
-  if (db.favorites.indexOf(normalized) === -1) return res.status(403).json({ error: 'Not allowed' });
+  const normalized = normalizeFavoritePath(filePath);
+  const validFavs = getValidFavorites();
+  if (validFavs.indexOf(normalized) === -1) return res.status(403).json({ error: 'Not allowed' });
   if (fs.existsSync(normalized) && fs.statSync(normalized).isFile()) {
     res.sendFile(normalized);
   } else {
@@ -205,7 +238,7 @@ app.get('/api/favfile', (req, res) => {
 });
 
 app.get('/api/config', (req, res) => {
-  res.json({ sourcePath: config.sourcePath, slideInterval: config.slideInterval, homeFolder: config.homeFolder || '', password: config.password || '', passwordEnabled: config.passwordEnabled !== false });
+  res.json({ sourcePath: config.sourcePath, slideInterval: config.slideInterval, homeFolder: config.homeFolder || '', hasPassword: !!config.password, passwordEnabled: config.passwordEnabled !== false });
 });
 app.post('/api/config', (req, res) => {
   if (req.body.sourcePath) {
@@ -217,12 +250,11 @@ app.post('/api/config', (req, res) => {
   if (req.body.password !== undefined) config.password = req.body.password;
   if (req.body.passwordEnabled !== undefined) config.passwordEnabled = !!req.body.passwordEnabled;
   saveConfig();
+  const safeConfig = { success: true, sourcePath: config.sourcePath, slideInterval: config.slideInterval, homeFolder: config.homeFolder || '', hasPassword: !!config.password, passwordEnabled: config.passwordEnabled !== false };
   if (req.body.password !== undefined || req.body.passwordEnabled !== undefined) {
-    // Force re-login if password changed
-    res.json({ success: true, ...config, relogin: true });
-  } else {
-    res.json({ success: true, ...config });
+    safeConfig.relogin = true;
   }
+  res.json(safeConfig);
 });
 
 // Browse folders
@@ -340,7 +372,9 @@ app.post('/api/folder', (req, res) => {
   ensureSource();
   const name = req.body.name.replace(/[^a-zA-Z0-9_\- \/]/g, '').trim().replace(/\s+/g, '_').replace(/\/+/g, '/').replace(/^\/|\/$/g, '');
   if (!name) return res.status(400).json({ error: 'Invalid folder name' });
-  const dir = path.join(config.sourcePath, name);
+  const dir = path.resolve(config.sourcePath, name);
+  const relCheck = path.relative(config.sourcePath, dir);
+  if (relCheck.startsWith('..') || path.isAbsolute(relCheck)) return res.status(403).json({ error: 'Invalid folder name' });
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   invalidateCache();
   res.json({ success: true });
@@ -350,10 +384,12 @@ app.post('/api/folder/delete', (req, res) => {
   ensureSource();
   const name = req.body.name;
   if (!name || name === 'geral') return res.status(400).json({ error: 'Cannot delete root' });
-  const dir = path.join(config.sourcePath, name);
+  const dir = path.resolve(config.sourcePath, name);
+  const relCheck = path.relative(config.sourcePath, dir);
+  if (relCheck.startsWith('..') || path.isAbsolute(relCheck)) return res.status(403).json({ error: 'Invalid path' });
   if (!fs.existsSync(dir)) return res.status(404).json({ error: 'Folder not found' });
   const prefix = path.resolve(dir);
-  db.favorites = db.favorites.filter(f => !f.startsWith(prefix));
+  db.favorites = db.favorites.map(normalizeFavoritePath).filter(f => !f.startsWith(prefix));
   saveDb();
   fs.rmSync(dir, { recursive: true, force: true });
   invalidateCache();
@@ -367,7 +403,10 @@ app.post('/api/upload', upload.array('photos', 100), (req, res) => {
 
 function resolveDeletePath(filePath) {
   if (filePath.indexOf('/source/') === 0) {
-    return path.join(config.sourcePath, decodeURIComponent(filePath.replace(/^\/source\//, '')));
+    const full = path.resolve(config.sourcePath, decodeURIComponent(filePath.replace(/^\/source\//, '')));
+    const rel = path.relative(config.sourcePath, full);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) return null;
+    return full;
   }
   return path.resolve(filePath);
 }
@@ -376,6 +415,7 @@ app.post('/api/delete', (req, res) => {
   const filePath = req.body.path;
   if (!filePath) return res.status(400).json({ error: 'Missing path' });
   const absolute = resolveDeletePath(filePath);
+  if (!absolute) return res.status(403).json({ error: 'Invalid path' });
   if (fs.existsSync(absolute)) fs.unlinkSync(absolute);
   const idx = db.favorites.indexOf(absolute);
   if (idx > -1) { db.favorites.splice(idx, 1); saveDb(); }
@@ -389,6 +429,7 @@ app.post('/api/delete/batch', (req, res) => {
   let changed = false;
   paths.forEach(filePath => {
     const absolute = resolveDeletePath(filePath);
+    if (!absolute) return;
     if (fs.existsSync(absolute)) { fs.unlinkSync(absolute); changed = true; }
     const idx = db.favorites.indexOf(absolute);
     if (idx > -1) { db.favorites.splice(idx, 1); changed = true; }
@@ -406,12 +447,11 @@ app.get('/api/network', (req, res) => {
 app.post('/api/favorite', (req, res) => {
   const { photoPath } = req.body;
   if (!photoPath) return res.status(400).json({ error: 'Missing photoPath' });
-  let absolute;
-  if (photoPath.indexOf('/source/') === 0) {
-    const relPath = decodeURIComponent(photoPath.replace(/^\/source\//, ''));
-    absolute = path.resolve(config.sourcePath, relPath);
-  } else {
-    absolute = path.resolve(photoPath);
+  const absolute = normalizeFavoritePath(photoPath);
+  const safeCheck = path.resolve(config.sourcePath);
+  if (path.relative(safeCheck, absolute).startsWith('..') && absolute.indexOf(path.resolve(config.sourcePath)) !== 0) {
+    const validFavs = getValidFavorites();
+    if (validFavs.indexOf(absolute) === -1) return res.status(403).json({ error: 'Not allowed' });
   }
   const idx = db.favorites.indexOf(absolute);
   if (idx > -1) db.favorites.splice(idx, 1);
