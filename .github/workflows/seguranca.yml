@@ -9,6 +9,10 @@ on:
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write # Necessário para enviar para a aba Security
+      actions: read
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,7 +25,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # ADICIONE ESTE PASSO AQUI:
       - name: Install Semgrep
         run: python3 -m pip install semgrep
 
@@ -29,17 +32,22 @@ jobs:
         run: mkdir -p SCANNERS
 
       - name: Start Server (Background)
-        run: npm start & 
-        
+        run: |
+          npm start &
+          npx wait-on http://localhost:3000 -t 30000
+
       - name: Run All Scanners
         run: npm run test:all
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        # Adicione continue-on-error: true se quiser que o workflow
-        # continue mesmo se um scanner falhar (opcional)
         continue-on-error: true
 
-      - name: Upload results
+      - name: Upload SARIF to Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: SCANNERS/resultado.sarif
+
+      - name: Upload results as artifact
         uses: actions/upload-artifact@v4
         with:
           name: security-reports

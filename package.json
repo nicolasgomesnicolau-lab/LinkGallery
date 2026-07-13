@@ -6,8 +6,8 @@
     "start": "node server.js",
     "lint": "eslint .",
     "test:security": "npx snyk test",
-    "test:sast": "semgrep scan --config auto --json > SCANNERS/resultado.json",
-    "test:dast": "docker run --rm -v ${PWD}:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://192.168.15.200:3000 -r SCANNERS/relatorio-dast.html",
+    "test:sast": "semgrep scan --config auto --sarif > SCANNERS/resultado.sarif",
+    "test:dast": "docker run --rm -v ${PWD}:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://localhost:3000 -r SCANNERS/relatorio-dast.html",
     "test:all": "npm run lint && npm run test:sast && npm run test:security && npm run test:dast"
   },
   "dependencies": {
