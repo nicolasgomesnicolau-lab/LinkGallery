@@ -1,3 +1,11 @@
+name: Security Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
   security-scan:
     runs-on: ubuntu-latest
