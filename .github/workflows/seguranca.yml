@@ -23,9 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Semgrep
-        run: python3 -m pip install semgrep
-
       - name: Create reports directory
         run: mkdir -p SCANNERS
 
@@ -34,32 +31,36 @@ jobs:
           npm start &
           npx wait-on http://localhost:3000 -t 30000
 
-      - name: Install Snyk
-        run: npm install -g snyk
-
-      - name: Install ZAP (via Docker)
-        run: docker pull ghcr.io/zaproxy/zaproxy:stable
-
-      - name: Run All Scanners
+      - name: Rodar Scanner SAST (Semgrep)
         run: |
-          echo "--- Iniciando Scanners ---"
-          npm run test:all || true
-          echo "--- Listagem dos arquivos gerados ---"
-          ls -la SCANNERS/
+          python3 -m pip install semgrep
+          semgrep scan --config auto --output SCANNERS/semgrep.html || true
+
+      - name: Rodar Scanner SCA (Snyk)
+        run: |
+          npm install -g snyk
+          snyk test --json > SCANNERS/snyk.json || true
+          npx snyk-to-html -i SCANNERS/snyk.json -o SCANNERS/snyk.html || true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Rodar Scanner DAST (ZAP)
+        run: |
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          docker run --rm -v ${PWD}/SCANNERS:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://127.0.0.1:3000 -r relatorio-dast.html || true
 
       - name: Criar Index de Relatórios
         run: |
           echo "<html><body><h1>Relatórios de Segurança</h1><ul>" > SCANNERS/index.html
           for file in SCANNERS/*.html; do
             filename=$(basename "$file")
-            # Ignora o próprio index.html na lista
             if [ "$filename" != "index.html" ]; then
               echo "<li><a href='$filename'>$filename</a></li>" >> SCANNERS/index.html
             fi
           done
           echo "</ul></body></html>" >> SCANNERS/index.html
+          echo "--- Arquivos gerados na pasta SCANNERS ---"
+          ls -la SCANNERS/
 
       - name: Deploy para GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
