@@ -1,4 +1,44 @@
-# ... (manter tudo igual até o final)
+name: Security Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Semgrep
+        run: python3 -m pip install semgrep
+
+      - name: Create reports directory
+        run: mkdir -p SCANNERS
+
+      - name: Start Server (Background)
+        run: |
+          npm start &
+          npx wait-on http://localhost:3000 -t 30000
+
+      - name: Run All Scanners
+        run: npm run test:all
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
 
       - name: Deploy para GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
