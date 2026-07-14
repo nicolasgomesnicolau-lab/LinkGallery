@@ -40,7 +40,16 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Deploy para GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./SCANNERS
+        run: |
+          # Cria um arquivo index.html simples listando os relatórios
+          echo "<html><body><h1>Relatórios de Segurança</h1><ul>" > SCANNERS/index.html
+          for file in SCANNERS/*.html; do
+            filename=$(basename "$file")
+            echo "<li><a href='$filename'>$filename</a></li>" >> SCANNERS/index.html
+          done
+          echo "</ul></body></html>" >> SCANNERS/index.html
+          
+          # Realiza o deploy
+          npx gh-pages -d SCANNERS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
