@@ -34,6 +34,12 @@ jobs:
           npm start &
           npx wait-on http://localhost:3000 -t 30000
 
+      - name: Install Snyk
+        run: npm install -g snyk
+
+      - name: Install ZAP (via Docker)
+        run: docker pull ghcr.io/zaproxy/zaproxy:stable
+
       - name: Run All Scanners
         run: |
           echo "--- Iniciando Scanners ---"
