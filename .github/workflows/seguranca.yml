@@ -10,7 +10,7 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Necessário para o deploy
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,14 +40,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Deploy para GitHub Pages
-        if: always()
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./SCANNERS
-
-      - name: Criar Index para o Dashboard
-        run: |
-          echo "<html><body><h1>Relatórios de Segurança</h1><ul>" > SCANNERS/index.html
-          ls SCANNERS/ | grep ".html" | awk '{print "<li><a href=\""$1"\">"$1"</a></li>"}' >> SCANNERS/index.html
-          echo "</ul></body></html>" >> SCANNERS/index.html
