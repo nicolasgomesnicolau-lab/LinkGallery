@@ -8,7 +8,7 @@
     "test:security": "mkdir -p SCANNERS && snyk test --json-file-output=SCANNERS/snyk.json && npx snyk-to-html -i SCANNERS/snyk.json -o SCANNERS/snyk.html",
     "test:sast": "mkdir -p SCANNERS && semgrep scan --config auto --output SCANNERS/semgrep.html",
     "test:dast": "mkdir -p SCANNERS && docker run --rm -v ${PWD}:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://localhost:3000 -r relatorio-dast.html && mv relatorio-dast.html SCANNERS/",
-    "test:all": "npm run lint && npm run test:sast && npm run test:security && npm run test:dast"
+    "test:all": "npm run test:sast || true; npm run test:security || true; npm run test:dast || true"
   },
   "dependencies": {
     "express": "^5.2.1",

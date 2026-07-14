@@ -55,13 +55,9 @@ function saveConfig() { fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, nul
 const DB_FILE = path.join(__dirname, 'db.json');
 let db = { favorites: [] };
 if (fs.existsSync(DB_FILE)) { try { db = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8')); } catch {} }
-// Normalize legacy favorites (may contain /source/ virtual paths)
-if (Array.isArray(db.favorites)) {
-  db.favorites = db.favorites.map(normalizeFavoritePath).filter(Boolean);
-}
 function saveDb() { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
 
-function normalizeFavoritePath(fp) {
+function resolveFavPath(fp) {
   if (fp.indexOf('/source/') === 0) {
     const rel = decodeURIComponent(fp.replace(/^\/source\//, ''));
     return path.resolve(config.sourcePath, rel);
@@ -70,9 +66,14 @@ function normalizeFavoritePath(fp) {
 }
 
 function getValidFavorites() {
-  return db.favorites.map(normalizeFavoritePath).filter(function(fp) {
-    try { return fs.existsSync(fp); } catch { return false; }
+  return db.favorites.filter(function(fp) {
+    const resolved = resolveFavPath(fp);
+    try { return fs.existsSync(resolved); } catch { return false; }
   });
+}
+
+function getFavAbsoluteList() {
+  return getValidFavorites().map(resolveFavPath);
 }
 
 function ensureSource() {
@@ -227,11 +228,11 @@ app.use('/thumb', (req, res, next) => {
 app.get('/api/favfile', (req, res) => {
   const filePath = req.query.path;
   if (!filePath) return res.status(400).json({ error: 'Missing path' });
-  const normalized = normalizeFavoritePath(filePath);
-  const validFavs = getValidFavorites();
-  if (validFavs.indexOf(normalized) === -1) return res.status(403).json({ error: 'Not allowed' });
-  if (fs.existsSync(normalized) && fs.statSync(normalized).isFile()) {
-    res.sendFile(normalized);
+  const resolved = resolveFavPath(filePath);
+  const allowed = getFavAbsoluteList();
+  if (allowed.indexOf(resolved) === -1) return res.status(403).json({ error: 'Not allowed' });
+  if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) {
+    res.sendFile(resolved);
   } else {
     res.status(404).json({ error: 'File not found' });
   }
@@ -299,7 +300,8 @@ app.get('/api/gallery', (req, res) => {
     }
     const total = filtered.length;
     const paged = hasPage ? filtered.slice((page - 1) * limit, (page - 1) * limit + limit) : filtered;
-    return { folders, allPhotos: paged, total, page, limit, favorites: getValidFavorites() };
+    const favAbs = getFavAbsoluteList();
+    return { folders, allPhotos: paged, total, page, limit, favorites: favAbs };
   }
 
   if (!cacheDirty && galleryCache) {
@@ -389,7 +391,7 @@ app.post('/api/folder/delete', (req, res) => {
   if (relCheck.startsWith('..') || path.isAbsolute(relCheck)) return res.status(403).json({ error: 'Invalid path' });
   if (!fs.existsSync(dir)) return res.status(404).json({ error: 'Folder not found' });
   const prefix = path.resolve(dir);
-  db.favorites = db.favorites.map(normalizeFavoritePath).filter(f => !f.startsWith(prefix));
+  db.favorites = db.favorites.filter(function(fp) { return !resolveFavPath(fp).startsWith(prefix); });
   saveDb();
   fs.rmSync(dir, { recursive: true, force: true });
   invalidateCache();
@@ -417,8 +419,8 @@ app.post('/api/delete', (req, res) => {
   const absolute = resolveDeletePath(filePath);
   if (!absolute) return res.status(403).json({ error: 'Invalid path' });
   if (fs.existsSync(absolute)) fs.unlinkSync(absolute);
-  const idx = db.favorites.indexOf(absolute);
-  if (idx > -1) { db.favorites.splice(idx, 1); saveDb(); }
+  const favIdx = db.favorites.findIndex(function(fp) { return resolveFavPath(fp) === absolute; });
+  if (favIdx > -1) { db.favorites.splice(favIdx, 1); saveDb(); }
   invalidateCache();
   res.json({ success: true });
 });
@@ -431,8 +433,8 @@ app.post('/api/delete/batch', (req, res) => {
     const absolute = resolveDeletePath(filePath);
     if (!absolute) return;
     if (fs.existsSync(absolute)) { fs.unlinkSync(absolute); changed = true; }
-    const idx = db.favorites.indexOf(absolute);
-    if (idx > -1) { db.favorites.splice(idx, 1); changed = true; }
+    const favIdx = db.favorites.findIndex(function(fp) { return resolveFavPath(fp) === absolute; });
+    if (favIdx > -1) { db.favorites.splice(favIdx, 1); changed = true; }
   });
   if (changed) saveDb();
   invalidateCache();
@@ -447,15 +449,15 @@ app.get('/api/network', (req, res) => {
 app.post('/api/favorite', (req, res) => {
   const { photoPath } = req.body;
   if (!photoPath) return res.status(400).json({ error: 'Missing photoPath' });
-  const absolute = normalizeFavoritePath(photoPath);
-  const safeCheck = path.resolve(config.sourcePath);
-  if (path.relative(safeCheck, absolute).startsWith('..') && absolute.indexOf(path.resolve(config.sourcePath)) !== 0) {
-    const validFavs = getValidFavorites();
-    if (validFavs.indexOf(absolute) === -1) return res.status(403).json({ error: 'Not allowed' });
+  const resolved = resolveFavPath(photoPath);
+  // Check if already favorited (by resolved path)
+  const existing = db.favorites.findIndex(function(fp) { return resolveFavPath(fp) === resolved; });
+  if (existing > -1) {
+    db.favorites.splice(existing, 1);
+  } else {
+    // Store in the format provided (absolute or /source/…)
+    db.favorites.push(resolved);
   }
-  const idx = db.favorites.indexOf(absolute);
-  if (idx > -1) db.favorites.splice(idx, 1);
-  else db.favorites.push(absolute);
   saveDb();
   res.json({ success: true, favorites: getValidFavorites() });
 });
