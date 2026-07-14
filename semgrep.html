@@ -36,17 +36,17 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-           96┆ const full = path.join(dir, entry);
+           97┆ const full = path.join(dir, entry);
             ⋮┆----------------------------------------
-           96┆ const full = path.join(dir, entry);
+           97┆ const full = path.join(dir, entry);
             ⋮┆----------------------------------------
-          108┆ absolutePath: path.resolve(dir, entry),
+          109┆ absolutePath: path.resolve(dir, entry),
             ⋮┆----------------------------------------
-          108┆ absolutePath: path.resolve(dir, entry),
+          109┆ absolutePath: path.resolve(dir, entry),
             ⋮┆----------------------------------------
-          122┆ const full = path.join(dir, entry);
+          123┆ const full = path.join(dir, entry);
             ⋮┆----------------------------------------
-          122┆ const full = path.join(dir, entry);
+          123┆ const full = path.join(dir, entry);
    
     ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -54,7 +54,7 @@
           intended destination                                                                        
           Details: https://sg.run/weRn                                                                
                                                                                                       
-          137┆ const dir = path.join(config.sourcePath, folder);
+          138┆ const dir = path.join(config.sourcePath, folder);
    
     ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -63,7 +63,7 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-          137┆ const dir = path.join(config.sourcePath, folder);
+          138┆ const dir = path.join(config.sourcePath, folder);
    
     ❯❱ javascript.express.security.audit.express-res-sendfile.express-res-sendfile
           ❰❰ Blocking ❱❱
@@ -73,7 +73,7 @@
           intended directory it should be accessing.                                                         
           Details: https://sg.run/7DJk                                                                       
                                                                                                              
-          234┆ res.sendFile(normalized);
+          235┆ res.sendFile(resolved);
    
     ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -81,7 +81,7 @@
           intended destination                                                                        
           Details: https://sg.run/weRn                                                                
                                                                                                       
-          245┆ const p = path.resolve(req.body.sourcePath);
+          246┆ const p = path.resolve(req.body.sourcePath);
    
     ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -90,7 +90,7 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-          245┆ const p = path.resolve(req.body.sourcePath);
+          246┆ const p = path.resolve(req.body.sourcePath);
    
     ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -98,7 +98,7 @@
           intended destination                                                                        
           Details: https://sg.run/weRn                                                                
                                                                                                       
-          273┆ try { dir = path.resolve(rp); } catch { return res.json([]); }
+          274┆ try { dir = path.resolve(rp); } catch { return res.json([]); }
    
     ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -107,7 +107,7 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-          273┆ try { dir = path.resolve(rp); } catch { return res.json([]); }
+          274┆ try { dir = path.resolve(rp); } catch { return res.json([]); }
    
     ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -115,7 +115,7 @@
           intended destination                                                                        
           Details: https://sg.run/weRn                                                                
                                                                                                       
-          278┆ const full = path.join(dir, e);
+          279┆ const full = path.join(dir, e);
    
     ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -124,9 +124,9 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-          278┆ const full = path.join(dir, e);
+          279┆ const full = path.join(dir, e);
             ⋮┆----------------------------------------
-          278┆ const full = path.join(dir, e);
+          279┆ const full = path.join(dir, e);
    
     ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -134,7 +134,7 @@
           intended destination                                                                        
           Details: https://sg.run/weRn                                                                
                                                                                                       
-          346┆ const rootFiles = fs.readdirSync(config.sourcePath).filter(f =>            
+          348┆ const rootFiles = fs.readdirSync(config.sourcePath).filter(f =>            
                fs.statSync(path.join(config.sourcePath, f)).isFile() && MEDIA_RE.test(f));
    
     ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
@@ -144,10 +144,10 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-          346┆ const rootFiles = fs.readdirSync(config.sourcePath).filter(f =>            
+          348┆ const rootFiles = fs.readdirSync(config.sourcePath).filter(f =>            
                fs.statSync(path.join(config.sourcePath, f)).isFile() && MEDIA_RE.test(f));
             ⋮┆----------------------------------------
-          346┆ const rootFiles = fs.readdirSync(config.sourcePath).filter(f =>            
+          348┆ const rootFiles = fs.readdirSync(config.sourcePath).filter(f =>            
                fs.statSync(path.join(config.sourcePath, f)).isFile() && MEDIA_RE.test(f));
    
     ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
@@ -156,7 +156,7 @@
           intended destination                                                                        
           Details: https://sg.run/weRn                                                                
                                                                                                       
-          375┆ const dir = path.resolve(config.sourcePath, name);
+          377┆ const dir = path.resolve(config.sourcePath, name);
    
     ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -165,7 +165,7 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-          375┆ const dir = path.resolve(config.sourcePath, name);
+          377┆ const dir = path.resolve(config.sourcePath, name);
    
     ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -173,7 +173,7 @@
           intended destination                                                                        
           Details: https://sg.run/weRn                                                                
                                                                                                       
-          387┆ const dir = path.resolve(config.sourcePath, name);
+          389┆ const dir = path.resolve(config.sourcePath, name);
    
     ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -182,7 +182,7 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-          387┆ const dir = path.resolve(config.sourcePath, name);
+          389┆ const dir = path.resolve(config.sourcePath, name);
    
     ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -190,7 +190,7 @@
           intended destination                                                                        
           Details: https://sg.run/weRn                                                                
                                                                                                       
-          387┆ const dir = path.resolve(config.sourcePath, name);
+          389┆ const dir = path.resolve(config.sourcePath, name);
    
     ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -199,7 +199,7 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-          387┆ const dir = path.resolve(config.sourcePath, name);
+          389┆ const dir = path.resolve(config.sourcePath, name);
    
     ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -207,7 +207,7 @@
           intended destination                                                                        
           Details: https://sg.run/weRn                                                                
                                                                                                       
-          391┆ const prefix = path.resolve(dir);
+          393┆ const prefix = path.resolve(dir);
    
     ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
           ❰❰ Blocking ❱❱
@@ -216,4 +216,4 @@
           stored in the file system. Instead, be sure to sanitize or validate user input first.          
           Details: https://sg.run/OPqk                                                                   
                                                                                                          
-          391┆ const prefix = path.resolve(dir);
+          393┆ const prefix = path.resolve(dir);
