@@ -1,0 +1,264 @@
+                    
+                    
+┌──────────────────┐
+│ 46 Code Findings │
+└──────────────────┘
+                                   
+    .github/workflows/seguranca.yml
+    ❯❱ yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
+          ❰❰ Blocking ❱❱
+          GitHub Actions step uses a mutable tag or branch reference. Tags and branch names can be silently   
+          repointed by the action owner, enabling supply-chain attacks — as seen in the trivy-action and kics-
+          github-action compromises. Pin the reference to a full 40-character commit SHA instead, e.g. `uses: 
+          actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608`.                                         
+          Details: https://sg.run/2LgAL                                                                       
+                                                                                                              
+           16┆ uses: actions/checkout@v4
+            ⋮┆----------------------------------------
+           19┆ uses: actions/setup-node@v4
+            ⋮┆----------------------------------------
+           44┆ uses: peaceiris/actions-gh-pages@v3
+                                
+    SCANNERS/relatorio-dast.html
+    ❯❱ html.security.plaintext-http-link.plaintext-http-link
+          ❰❰ Blocking ❱❱
+          This link points to a plaintext HTTP URL. Prefer an encrypted HTTPS URL if possible.
+          Details: https://sg.run/RA5q                                                        
+                                                                                              
+          526┆ <td width="80%"><a                                                                         
+               href="http://192.168.15.200:3000/robots.txt">http://192.168.15.200:3000/robots.txt</a></td>
+            ⋮┆----------------------------------------
+          565┆ <td width="80%"><a                                                                         
+               href="http://192.168.15.200:3000/sitemap.xml">http://192.168.15.200:3000/sitemap.xml</a></t
+               d>                                                                                         
+            ⋮┆----------------------------------------
+          672┆ <td width="80%"><a href="http://192.168.15.200:3000">http://192.168.15.200:3000</a></td>
+            ⋮┆----------------------------------------
+          708┆ <td width="80%"><a href="http://192.168.15.200:3000/">http://192.168.15.200:3000/</a></td>
+            ⋮┆----------------------------------------
+          818┆ <td width="80%"><a href="http://192.168.15.200:3000">http://192.168.15.200:3000</a></td>
+            ⋮┆----------------------------------------
+          854┆ <td width="80%"><a href="http://192.168.15.200:3000/">http://192.168.15.200:3000/</a></td>
+            ⋮┆----------------------------------------
+          949┆ <td width="80%"><a href="http://192.168.15.200:3000">http://192.168.15.200:3000</a></td>
+            ⋮┆----------------------------------------
+          985┆ <td width="80%"><a href="http://192.168.15.200:3000/">http://192.168.15.200:3000/</a></td>
+            ⋮┆----------------------------------------
+          1021┆ <td width="80%"><a                                                                      
+               href="http://192.168.15.200:3000/js/app.js">http://192.168.15.200:3000/js/app.js</a></td>
+            ⋮┆----------------------------------------
+          1057┆ <td width="80%"><a                                                                        
+               href="http://192.168.15.200:3000/robots.txt">http://192.168.15.200:3000/robots.txt</a></td>
+            ⋮┆----------------------------------------
+          1093┆ <td width="80%"><a                                                                        
+               href="http://192.168.15.200:3000/sitemap.xml">http://192.168.15.200:3000/sitemap.xml</a></t
+               d>                                                                                         
+            ⋮┆----------------------------------------
+          1197┆ <td width="80%"><a href="http://192.168.15.200:3000">http://192.168.15.200:3000</a></td>
+            ⋮┆----------------------------------------
+          1236┆ <td width="80%"><a href="http://192.168.15.200:3000/">http://192.168.15.200:3000/</a></td>
+            ⋮┆----------------------------------------
+          1327┆ <td width="80%"><a href="http://192.168.15.200:3000/">http://192.168.15.200:3000/</a></td>
+            ⋮┆----------------------------------------
+          1363┆ <td width="80%"><a                                                                        
+               href="http://192.168.15.200:3000/sitemap.xml">http://192.168.15.200:3000/sitemap.xml</a></t
+               d>                                                                                         
+             
+    server.js
+     ❱ javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
+          ❰❰ Blocking ❱❱
+          A CSRF middleware was not detected in your express application. Ensure you are either using one such
+          as `csurf` or `csrf` (see rule references) and/or you are properly doing CSRF validation in your    
+          routes with a token or cookies.                                                                     
+          Details: https://sg.run/BxzR                                                                        
+                                                                                                              
+           11┆ const app = express();
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+           96┆ const full = path.join(dir, entry);
+            ⋮┆----------------------------------------
+           96┆ const full = path.join(dir, entry);
+            ⋮┆----------------------------------------
+          108┆ absolutePath: path.resolve(dir, entry),
+            ⋮┆----------------------------------------
+          108┆ absolutePath: path.resolve(dir, entry),
+            ⋮┆----------------------------------------
+          122┆ const full = path.join(dir, entry);
+            ⋮┆----------------------------------------
+          122┆ const full = path.join(dir, entry);
+   
+    ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Possible writing outside of the destination, make sure that the target path is nested in the
+          intended destination                                                                        
+          Details: https://sg.run/weRn                                                                
+                                                                                                      
+          137┆ const dir = path.join(config.sourcePath, folder);
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+          137┆ const dir = path.join(config.sourcePath, folder);
+   
+    ❯❱ javascript.express.security.audit.express-res-sendfile.express-res-sendfile
+          ❰❰ Blocking ❱❱
+          The application processes user-input, this is passed to res.sendFile which can allow an attacker to
+          arbitrarily read files on the system through path traversal. It is recommended to perform input    
+          validation in addition to canonicalizing the path. This allows you to validate the path against the
+          intended directory it should be accessing.                                                         
+          Details: https://sg.run/7DJk                                                                       
+                                                                                                             
+          234┆ res.sendFile(normalized);
+   
+    ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Possible writing outside of the destination, make sure that the target path is nested in the
+          intended destination                                                                        
+          Details: https://sg.run/weRn                                                                
+                                                                                                      
+          245┆ const p = path.resolve(req.body.sourcePath);
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+          245┆ const p = path.resolve(req.body.sourcePath);
+   
+    ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Possible writing outside of the destination, make sure that the target path is nested in the
+          intended destination                                                                        
+          Details: https://sg.run/weRn                                                                
+                                                                                                      
+          273┆ try { dir = path.resolve(rp); } catch { return res.json([]); }
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+          273┆ try { dir = path.resolve(rp); } catch { return res.json([]); }
+   
+    ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Possible writing outside of the destination, make sure that the target path is nested in the
+          intended destination                                                                        
+          Details: https://sg.run/weRn                                                                
+                                                                                                      
+          278┆ const full = path.join(dir, e);
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+          278┆ const full = path.join(dir, e);
+            ⋮┆----------------------------------------
+          278┆ const full = path.join(dir, e);
+   
+    ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Possible writing outside of the destination, make sure that the target path is nested in the
+          intended destination                                                                        
+          Details: https://sg.run/weRn                                                                
+                                                                                                      
+          346┆ const rootFiles = fs.readdirSync(config.sourcePath).filter(f =>            
+               fs.statSync(path.join(config.sourcePath, f)).isFile() && MEDIA_RE.test(f));
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+          346┆ const rootFiles = fs.readdirSync(config.sourcePath).filter(f =>            
+               fs.statSync(path.join(config.sourcePath, f)).isFile() && MEDIA_RE.test(f));
+            ⋮┆----------------------------------------
+          346┆ const rootFiles = fs.readdirSync(config.sourcePath).filter(f =>            
+               fs.statSync(path.join(config.sourcePath, f)).isFile() && MEDIA_RE.test(f));
+   
+    ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Possible writing outside of the destination, make sure that the target path is nested in the
+          intended destination                                                                        
+          Details: https://sg.run/weRn                                                                
+                                                                                                      
+          375┆ const dir = path.resolve(config.sourcePath, name);
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+          375┆ const dir = path.resolve(config.sourcePath, name);
+   
+    ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Possible writing outside of the destination, make sure that the target path is nested in the
+          intended destination                                                                        
+          Details: https://sg.run/weRn                                                                
+                                                                                                      
+          387┆ const dir = path.resolve(config.sourcePath, name);
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+          387┆ const dir = path.resolve(config.sourcePath, name);
+   
+    ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Possible writing outside of the destination, make sure that the target path is nested in the
+          intended destination                                                                        
+          Details: https://sg.run/weRn                                                                
+                                                                                                      
+          387┆ const dir = path.resolve(config.sourcePath, name);
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+          387┆ const dir = path.resolve(config.sourcePath, name);
+   
+    ❯❱ javascript.express.security.audit.express-path-join-resolve-traversal.express-path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Possible writing outside of the destination, make sure that the target path is nested in the
+          intended destination                                                                        
+          Details: https://sg.run/weRn                                                                
+                                                                                                      
+          391┆ const prefix = path.resolve(dir);
+   
+    ❯❱ javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+          ❰❰ Blocking ❱❱
+          Detected possible user input going into a `path.join` or `path.resolve` function. This could   
+          possibly lead to a path traversal vulnerability,  where the attacker can access arbitrary files
+          stored in the file system. Instead, be sure to sanitize or validate user input first.          
+          Details: https://sg.run/OPqk                                                                   
+                                                                                                         
+          391┆ const prefix = path.resolve(dir);
