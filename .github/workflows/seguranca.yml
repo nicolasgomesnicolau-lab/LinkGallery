@@ -41,7 +41,11 @@ jobs:
 
       - name: Deploy para GitHub Pages
         run: |
-          # Cria um arquivo index.html simples listando os relatórios
+          # 1. Configura o autor do commit
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          # 2. Cria um arquivo index.html simples listando os relatórios
           echo "<html><body><h1>Relatórios de Segurança</h1><ul>" > SCANNERS/index.html
           for file in SCANNERS/*.html; do
             filename=$(basename "$file")
@@ -49,7 +53,7 @@ jobs:
           done
           echo "</ul></body></html>" >> SCANNERS/index.html
           
-          # Realiza o deploy
+          # 3. Realiza o deploy
           npx gh-pages -d SCANNERS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
