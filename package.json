@@ -6,7 +6,7 @@
     "start": "node server.js",
     "lint": "eslint .",
     "test:security": "mkdir -p SCANNERS && snyk test --json-file-output=SCANNERS/snyk.json && npx snyk-to-html -i SCANNERS/snyk.json -o SCANNERS/snyk.html",
-    "test:sast": "mkdir -p SCANNERS && semgrep scan --config auto --sarif --output SCANNERS/semgrep.sarif && npx @semgrep/sarif-to-html SCANNERS/semgrep.sarif > SCANNERS/semgrep.html",
+    "test:sast": "mkdir -p SCANNERS && semgrep scan --config auto --output SCANNERS/semgrep.html",
     "test:dast": "mkdir -p SCANNERS && docker run --rm -v ${PWD}:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://localhost:3000 -r relatorio-dast.html && mv relatorio-dast.html SCANNERS/",
     "test:all": "npm run lint && npm run test:sast && npm run test:security && npm run test:dast"
   },
@@ -20,7 +20,6 @@
   "devDependencies": {
     "eslint": "^9.0.0",
     "snyk": "^1.1290.0",
-    "snyk-to-html": "^1.13.0",
-    "@semgrep/sarif-to-html": "^0.1.0"
+    "snyk-to-html": "^1.13.0"
   }
 }
