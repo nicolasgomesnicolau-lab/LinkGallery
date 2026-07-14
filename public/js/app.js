@@ -388,7 +388,9 @@ function renderGrid(photos) {
 }
 
 function favfileUrl(photo) {
-  return '/api/favfile?path=' + encodeURIComponent(photo)
+  var url = '/api/favfile?path=' + encodeURIComponent(photo)
+  if (authPassword) url += '&password=' + encodeURIComponent(authPassword)
+  return url
 }
 
 function buildGridHTML(photos, startIdx) {

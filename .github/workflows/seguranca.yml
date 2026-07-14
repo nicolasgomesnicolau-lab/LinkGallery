@@ -10,7 +10,7 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Necessário para o deploy
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,7 +35,11 @@ jobs:
           npx wait-on http://localhost:3000 -t 30000
 
       - name: Run All Scanners
-        run: npm run test:all || true
+        run: |
+          echo "--- Iniciando Scanners ---"
+          npm run test:all || true
+          echo "--- Listagem dos arquivos gerados ---"
+          ls -la SCANNERS/
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
@@ -44,7 +48,10 @@ jobs:
           echo "<html><body><h1>Relatórios de Segurança</h1><ul>" > SCANNERS/index.html
           for file in SCANNERS/*.html; do
             filename=$(basename "$file")
-            echo "<li><a href='$filename'>$filename</a></li>" >> SCANNERS/index.html
+            # Ignora o próprio index.html na lista
+            if [ "$filename" != "index.html" ]; then
+              echo "<li><a href='$filename'>$filename</a></li>" >> SCANNERS/index.html
+            fi
           done
           echo "</ul></body></html>" >> SCANNERS/index.html
 
