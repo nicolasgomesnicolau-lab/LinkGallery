@@ -45,3 +45,9 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./SCANNERS
+
+      - name: Criar Index para o Dashboard
+        run: |
+          echo "<html><body><h1>Relatórios de Segurança</h1><ul>" > SCANNERS/index.html
+          ls SCANNERS/ | grep ".html" | awk '{print "<li><a href=\""$1"\">"$1"</a></li>"}' >> SCANNERS/index.html
+          echo "</ul></body></html>" >> SCANNERS/index.html
