@@ -20,8 +20,11 @@ concurrency:
 jobs:
   security-scan:
 
-    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
+    runs-on: ubuntu-latest
     steps:
 
       - name: Checkout do projeto
