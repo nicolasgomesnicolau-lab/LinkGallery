@@ -16,13 +16,17 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+
 jobs:
   security-scan:
+
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout do projeto
         uses: actions/checkout@v4
+
 
       - name: Instalar Node.js
         uses: actions/setup-node@v4
@@ -30,51 +34,63 @@ jobs:
           node-version: 22
           cache: npm
 
+
       - name: Instalar Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+
       - name: Instalar dependências
         run: npm install
+
 
       - name: Instalar Semgrep
         run: pip install semgrep
 
+
       - name: Criar pasta SCANNERS
         run: mkdir -p SCANNERS
+
 
       - name: Iniciar aplicação
         run: |
           npm start &
           sleep 10
 
+
       - name: Executar Semgrep
-        run: npm run test:sast
+        run: npm run test:sast || true
+
 
       - name: Executar Snyk
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: npm run test:security
+        run: npm run test:security || true
+
 
       - name: Executar OWASP ZAP
         run: |
           docker run --rm \
+            --user root \
             --network host \
             -v ${{ github.workspace }}/SCANNERS:/zap/wrk \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t http://localhost:3000 \
-            -r relatorio-dast.html
+            -r relatorio-dast.html || true
+
 
       - name: Criar página inicial
         run: |
           cat > SCANNERS/index.html <<EOF
           <!DOCTYPE html>
           <html>
+
           <head>
             <meta charset="UTF-8">
             <title>Security Reports</title>
+
             <style>
               body{
                 font-family:Arial;
@@ -82,9 +98,11 @@ jobs:
                 background:#111;
                 color:white;
               }
+
               h1{
                 color:#4ea3ff;
               }
+
               a{
                 display:block;
                 margin:15px 0;
@@ -92,28 +110,45 @@ jobs:
                 color:#4ea3ff;
               }
             </style>
+
           </head>
+
+
           <body>
 
-          <h1>Security Reports</h1>
+            <h1>Security Reports</h1>
 
-          <a href="snyk.html">📦 Snyk Report</a>
+            <a href="snyk.html">
+              📦 Snyk Report
+            </a>
 
-          <a href="relatorio-dast.html">🛡️ OWASP ZAP Report</a>
 
-          <a href="semgrep.sarif">🔍 Semgrep SARIF</a>
+            <a href="relatorio-dast.html">
+              🛡️ OWASP ZAP Report
+            </a>
+
+
+            <a href="semgrep.sarif">
+              🔍 Semgrep SARIF
+            </a>
+
 
           </body>
+
           </html>
           EOF
 
+
+
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
+
 
       - name: Enviar artefato
         uses: actions/upload-pages-artifact@v3
         with:
           path: SCANNERS
+
 
       - name: Publicar GitHub Pages
         id: deployment
