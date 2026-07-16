@@ -7,10 +7,12 @@ on:
 
   workflow_dispatch:
 
+
 permissions:
   contents: read
   pages: write
   id-token: write
+
 
 concurrency:
   group: pages
@@ -25,6 +27,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     runs-on: ubuntu-latest
+
     steps:
 
       - name: Checkout do projeto
@@ -49,9 +52,8 @@ jobs:
 
 
       - name: Instalar Semgrep
-  run: |
-    pip install semgrep
-    pip install semgrep-html
+        run: |
+          pip install semgrep
 
 
       - name: Criar pasta SCANNERS
@@ -142,7 +144,6 @@ jobs:
 
           </html>
           EOF
-
 
 
       - name: Configurar GitHub Pages
