@@ -6,11 +6,11 @@
     "start": "node server.js",
     "lint": "eslint .",
 
-    "prepare:scanners": "powershell -Command \"New-Item -ItemType Directory -Force SCANNERS | Out-Null\"",
+    "prepare:scanners": "node -e \"require('fs').mkdirSync('SCANNERS',{recursive:true})\"",
 
     "test:security": "npm run prepare:scanners && snyk test --json-file-output=SCANNERS/snyk.json && npx snyk-to-html -i SCANNERS/snyk.json -o SCANNERS/snyk.html",
 
-    "test:sast": "npm run prepare:scanners && powershell -Command \"$env:PYTHONUTF8='1'; semgrep scan --config auto --sarif --output SCANNERS/semgrep.sarif\"",
+    "test:sast": "npm run prepare:scanners && semgrep scan --config auto --sarif --output SCANNERS/semgrep.sarif",
 
     "test:dast": "npm run prepare:scanners && docker run --rm -v \"%cd%\\SCANNERS:/zap/wrk\" -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://host.docker.internal:3000 -r relatorio-dast.html",
 
