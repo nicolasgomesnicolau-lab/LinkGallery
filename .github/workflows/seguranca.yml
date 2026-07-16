@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Baixar projeto
+      - name: Checkout do projeto
         uses: actions/checkout@v4
 
       - name: Instalar Node.js
@@ -41,19 +41,31 @@ jobs:
       - name: Instalar Semgrep
         run: pip install semgrep
 
-      - name: Instalar Docker
-        uses: docker/setup-buildx-action@v3
+      - name: Criar pasta SCANNERS
+        run: mkdir -p SCANNERS
 
       - name: Iniciar aplicação
         run: |
           npm start &
           sleep 10
 
-      - name: Executar scanners
+      - name: Executar Semgrep
+        run: npm run test:sast
+
+      - name: Executar Snyk
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: npm run test:security
+
+      - name: Executar OWASP ZAP
         run: |
-          npm run test:all
+          docker run --rm \
+            --network host \
+            -v ${{ github.workspace }}/SCANNERS:/zap/wrk \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py \
+            -t http://localhost:3000 \
+            -r relatorio-dast.html
 
       - name: Criar página inicial
         run: |
@@ -70,6 +82,9 @@ jobs:
                 background:#111;
                 color:white;
               }
+              h1{
+                color:#4ea3ff;
+              }
               a{
                 display:block;
                 margin:15px 0;
@@ -79,15 +94,14 @@ jobs:
             </style>
           </head>
           <body>
-            <h1>Security Reports</h1>
 
-            <a href="snyk.html">Snyk Report</a>
+          <h1>Security Reports</h1>
 
-            <a href="relatorio-dast.html">OWASP ZAP Report</a>
+          <a href="snyk.html">📦 Snyk Report</a>
 
-            <a href="semgrep.sarif">
-              Semgrep SARIF
-            </a>
+          <a href="relatorio-dast.html">🛡️ OWASP ZAP Report</a>
+
+          <a href="semgrep.sarif">🔍 Semgrep SARIF</a>
 
           </body>
           </html>
