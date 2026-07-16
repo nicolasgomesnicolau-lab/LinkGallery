@@ -1,69 +1,106 @@
-name: Security Pipeline
+name: Security Reports
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   security-scan:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
     steps:
-      - name: Checkout code
+      - name: Baixar projeto
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Instalar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 22
+          cache: npm
 
-      - name: Install dependencies
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
         run: npm install
 
-      - name: Create reports directory
-        run: mkdir -p SCANNERS
+      - name: Instalar Semgrep
+        run: pip install semgrep
 
-      - name: Start Server (Background)
+      - name: Instalar Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Iniciar aplicação
         run: |
           npm start &
-          npx wait-on http://localhost:3000 -t 30000
+          sleep 10
 
-      - name: Rodar Scanner SAST (Semgrep)
-        run: |
-          python3 -m pip install semgrep
-          semgrep scan --config auto --output SCANNERS/semgrep.html || true
-
-      - name: Rodar Scanner SCA (Snyk)
-        run: |
-          npm install -g snyk
-          snyk test --json > SCANNERS/snyk.json || true
-          npx snyk-to-html -i SCANNERS/snyk.json -o SCANNERS/snyk.html || true
+      - name: Executar scanners
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Rodar Scanner DAST (ZAP)
         run: |
-          docker pull ghcr.io/zaproxy/zaproxy:stable
-          docker run --rm -v ${PWD}/SCANNERS:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://127.0.0.1:3000 -r relatorio-dast.html || true
+          npm run test:all
 
-      - name: Criar Index de Relatórios
+      - name: Criar página inicial
         run: |
-          echo "<html><body><h1>Relatórios de Segurança</h1><ul>" > SCANNERS/index.html
-          for file in SCANNERS/*.html; do
-            filename=$(basename "$file")
-            if [ "$filename" != "index.html" ]; then
-              echo "<li><a href='$filename'>$filename</a></li>" >> SCANNERS/index.html
-            fi
-          done
-          echo "</ul></body></html>" >> SCANNERS/index.html
-          echo "--- Arquivos gerados na pasta SCANNERS ---"
-          ls -la SCANNERS/
+          cat > SCANNERS/index.html <<EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Security Reports</title>
+            <style>
+              body{
+                font-family:Arial;
+                margin:40px;
+                background:#111;
+                color:white;
+              }
+              a{
+                display:block;
+                margin:15px 0;
+                font-size:20px;
+                color:#4ea3ff;
+              }
+            </style>
+          </head>
+          <body>
+            <h1>Security Reports</h1>
 
-      - name: Deploy para GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+            <a href="snyk.html">Snyk Report</a>
+
+            <a href="relatorio-dast.html">OWASP ZAP Report</a>
+
+            <a href="semgrep.sarif">
+              Semgrep SARIF
+            </a>
+
+          </body>
+          </html>
+          EOF
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Enviar artefato
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./SCANNERS
+          path: SCANNERS
+
+      - name: Publicar GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
