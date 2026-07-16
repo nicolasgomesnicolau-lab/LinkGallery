@@ -49,7 +49,9 @@ jobs:
 
 
       - name: Instalar Semgrep
-        run: pip install semgrep
+  run: |
+    pip install semgrep
+    pip install semgrep-html
 
 
       - name: Criar pasta SCANNERS

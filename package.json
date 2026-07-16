@@ -16,7 +16,7 @@
     "test:security": "npm run prepare:scanners && snyk test --json-file-output=SCANNERS/snyk.json && npx snyk-to-html -i SCANNERS/snyk.json -o SCANNERS/snyk.html",
 
 
-    "test:sast": "npm run prepare:scanners && semgrep scan --config auto --sarif --output SCANNERS/semgrep.sarif",
+    "test:sast": "npm run prepare:scanners && semgrep scan --config auto --json-output SCANNERS/semgrep.json && semgrep scan --config auto --output SCANNERS/semgrep.txt",
 
 
     "test:dast": "npm run prepare:scanners && docker run --rm --user root -v \"%cd%\\SCANNERS:/zap/wrk\" -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://host.docker.internal:3000 -r relatorio-dast.html",
