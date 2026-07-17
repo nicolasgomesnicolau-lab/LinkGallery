@@ -51,10 +51,9 @@ jobs:
         run: npm install
 
 
-      - name: Instalar Semgrep e conversor HTML
+      - name: Instalar Semgrep
         run: |
           pip install semgrep
-          npm install -g sarif-to-html
 
 
       - name: Criar pasta SCANNERS
@@ -71,12 +70,73 @@ jobs:
         run: |
           semgrep scan \
             --config auto \
-            --sarif \
-            --output SCANNERS/semgrep.sarif || true
+            --json \
+            --output SCANNERS/semgrep.json || true
 
-          sarif-to-html \
-            SCANNERS/semgrep.sarif \
-            -o SCANNERS/semgrep.html || true
+
+      - name: Criar relatório HTML Semgrep
+        run: |
+          python3 - <<'PY'
+          import json
+
+          with open("SCANNERS/semgrep.json") as f:
+              data = json.load(f)
+
+          html = """
+          <!DOCTYPE html>
+          <html>
+          <head>
+          <meta charset="UTF-8">
+          <title>Semgrep Report</title>
+          <style>
+          body {
+            font-family: Arial;
+            background:#111;
+            color:white;
+            margin:40px;
+          }
+
+          h1 {
+            color:#4ea3ff;
+          }
+
+          .item {
+            border:1px solid #444;
+            padding:15px;
+            margin:15px 0;
+          }
+          </style>
+          </head>
+
+          <body>
+
+          <h1>Semgrep Report</h1>
+          """
+
+          results = data.get("results", [])
+
+          if not results:
+              html += "<h2>No issues found</h2>"
+          else:
+              for r in results:
+                  html += f"""
+                  <div class="item">
+                  <b>{r.get('check_id')}</b><br>
+                  File: {r.get('path')}<br>
+                  Line: {r.get('start', {}).get('line')}<br><br>
+                  {r.get('extra', {}).get('message')}
+                  </div>
+                  """
+
+          html += """
+          </body>
+          </html>
+          """
+
+          with open("SCANNERS/semgrep.html","w") as f:
+              f.write(html)
+
+          PY
 
 
       - name: Executar Snyk
@@ -138,16 +198,13 @@ jobs:
               📦 Snyk Report
             </a>
 
-
             <a href="relatorio-dast.html">
               🛡️ OWASP ZAP Report
             </a>
 
-
             <a href="semgrep.html">
               🔍 Semgrep Report
             </a>
-
 
           </body>
 
